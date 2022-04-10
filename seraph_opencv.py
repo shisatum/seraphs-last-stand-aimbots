@@ -10,7 +10,6 @@ Prereqs: Win10, Python3, 1920x1080p
 # 2) Train a CNN to detect enemies and connect it to this script.
 import cv2
 import ctypes
-from ctypes import c_bool
 import keyboard
 import math
 import multiprocessing
