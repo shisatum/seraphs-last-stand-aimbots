@@ -3,10 +3,9 @@ Seraph's Last Stand OpenCV aimbot v0.1.3
 Prereqs: Win10, Python3, 1920x1080p
 """
 # To do:
-# 0) Play with framerate on line 44 *or* set framerate in main function and multiprocess each run of find_and_shoot_birds()
-# 1) Train a CNN to detect enemies and connect it to this script.
+# 0) Play with framerate on line 35 *or* set framerate in main function and multiprocess each run of find_and_shoot_birds()
+# 1) Train a CNN to detect enemies.
 import cv2
-#import ctypes
 import keyboard
 import math
 import multiprocessing
@@ -67,11 +66,7 @@ def find_and_shoot_birds():
 
             # Shoot!
             if DEBUG: print("Shooting " + str(abs_x) + "," + str(abs_y))
-            #ctypes.windll.user32.SetCursorPos(abs_x, abs_y)
             pyautogui.moveTo(abs_x, abs_y)
-            # Changed to holding mouse down elsewhere
-            #ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)  # left down
-            #ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)  # left up
             just_shot_coords.append((abs_x, abs_y))
 
         if DEBUG:
