@@ -1,10 +1,9 @@
 """
-Seraph's Last Stand OpenCV aimbot v0.1.3
+Seraph's Last Stand OpenCV aimbot v0.1.4
 Prereqs: Win10, Python3, 1920x1080p
 """
 # To do:
-# 0) Play with framerate on line 35 *or* set framerate in main function and multiprocess each run of find_and_shoot_birds()
-# 1) Train a CNN to detect enemies.
+# Play with framerate on line 35 *or* set framerate in main function and multiprocess each run of find_and_shoot_birds()
 import cv2
 import keyboard
 import math
@@ -73,9 +72,6 @@ def find_and_shoot_birds():
             pyautogui.press('esc') # Pause game
             cv2.imwrite('targets.png', frame_bgr)
             print("Saved image")
-            #print("Displaying image")
-            #cv2.imshow('OpenCV', cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB))
-            #time.sleep(5)
             winsound.Beep(432, 200)
             break
 
