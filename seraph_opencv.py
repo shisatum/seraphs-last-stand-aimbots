@@ -6,7 +6,7 @@ Prereqs: Win10, Python3, 1920x1080p
 # 0) Play with framerate on line 44 *or* set framerate in main function and multiprocess each run of find_and_shoot_birds()
 # 1) Train a CNN to detect enemies and connect it to this script.
 import cv2
-import ctypes
+#import ctypes
 import keyboard
 import math
 import multiprocessing
@@ -26,20 +26,14 @@ def find_and_shoot_birds():
     screenLFT = 160
     screenRGT = 1720
 
-    #template = cv2.imread('enemy.png', 0)
-    #template = cv2.imread('enemy_eye.png', 0)
     template = cv2.imread('enemy_segment.png', 0)
     template_w, template_h = template.shape[::-1]
-    #### new ####
-    #upgrade_screen_template = cv2.imread('upgrade_screen.png', 0)
-    #upgrade_screen_template_w, upgrade_screen_template_h = upgrade_screen_template.shape[::-1]
-    #### new ####
 
     framecount = 0
     while (True):
 
         framecount += 1
-        if ((framecount % 5) != 0): # Detect every x frames?
+        if ((framecount % 5) != 0):
             continue
 
         # Read screen
@@ -51,17 +45,6 @@ def find_and_shoot_birds():
         # Apply template Matching
         bird_candidates = cv2.matchTemplate(image=frame_gray, templ=template, method=cv2.TM_CCOEFF_NORMED)
         definite_birds = np.where(bird_candidates >= 0.7)
-        #### new ####
-        #upgrade_candidates = cv2.matchTemplate(image=frame_gray, templ=upgrade_screen_template, method=cv2.TM_CCOEFF_NORMED)
-        #definite_upgrades = np.where(upgrade_candidates >= 0.7)
-        #dobreak = False
-        #if len(definite_upgrades) > 2:
-        #    print("Upgrade screen detected")
-        #    winsound.Beep(532, 500)
-        #    time.sleep(1)
-        #    dobreak = True
-        #if dobreak: break
-        #### new ####
 
         for bird in zip(*definite_birds[::-1]):
             cv2.circle(img=frame_bgr, center=(int(bird[0] + template_w/2), int(bird[1] + template_h / 2)), radius=int(template_h/2), color=(255, 0, 0), thickness=2)
@@ -84,7 +67,8 @@ def find_and_shoot_birds():
 
             # Shoot!
             if DEBUG: print("Shooting " + str(abs_x) + "," + str(abs_y))
-            ctypes.windll.user32.SetCursorPos(abs_x, abs_y)
+            #ctypes.windll.user32.SetCursorPos(abs_x, abs_y)
+            pyautogui.moveTo(abs_x, abs_y)
             # Changed to holding mouse down elsewhere
             #ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)  # left down
             #ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)  # left up
