@@ -1,9 +1,7 @@
 """
-Seraph's Last Stand OpenCV aimbot v0.1.4
+Seraph's Last Stand OpenCV aimbot v0.2.0
 Prereqs: Win10, Python3, 1920x1080p
 """
-# To do:
-# Play with framerate on line 35 *or* set framerate in main function and multiprocess each run of find_and_shoot_birds()
 import cv2
 import keyboard
 import math
@@ -14,97 +12,114 @@ import pyautogui
 import time
 import winsound
 
-#DEBUG=True
-DEBUG=False
+DEBUG_RUNNING=False
+DEBUG_PERKS=False
+DEBUG_CLICKED=False
+DEBUG_SHOOTING=False
+DEBUG_LOCATIONS=False
 
-def find_and_shoot_birds():
-    """ Captures screen, template matches enemy, and clicks the matched location """
-    screenTOP = 100
-    screenBOT = 800
-    screenLFT = 160
-    screenRGT = 1720
+# Screen capture stuff
+SCREENTOP = 100
+SCREENBOT = 800
+SCREENLFT = 160
+SCREENRGT = 1720
 
-    template = cv2.imread('enemy_segment.png', 0)
-    template_w, template_h = template.shape[::-1]
+TEMPLATE = cv2.imread('enemy_segment.png', 0)
+TEMPLATE_W, TEMPLATE_H = TEMPLATE.shape[::-1]
+PERK_TEMPLATE = cv2.imread('perk_menu.png', 0)
 
-    framecount = 0
-    while (True):
+def capture_screen():
+    """ Captures screen """
+    frame_bgr = np.array(ImageGrab.grab(bbox=(SCREENLFT, SCREENTOP, SCREENRGT, SCREENBOT)))
+    return frame_bgr
 
-        framecount += 1
-        if ((framecount % 5) != 0):
+def convert_gray(frame_bgr):
+    """ Converts captured screen to gray """
+    frame_gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
+    return frame_gray
+
+def find_birds(frame_gray):
+    """ Template matches and returns matched birds """
+    bird_candidates = cv2.matchTemplate(image=frame_gray, templ=TEMPLATE, method=cv2.TM_CCOEFF_NORMED)
+    definite_birds = np.where(bird_candidates >= 0.7) # Filter results with 70% confidence
+    return definite_birds
+
+def find_perks(frame_gray):
+    """ Template matches and returns matched perks """
+    perk_candidates = cv2.matchTemplate(image=frame_gray, templ=PERK_TEMPLATE, method=cv2.TM_CCOEFF_NORMED)
+    definite_perks = np.where(perk_candidates >= 0.9) # Filter results with 90% confidence
+    return definite_perks
+
+def shoot_birds(definite_birds):
+    """ Moves mouse to the matched locations """
+    if DEBUG_SHOOTING: print("      Shooting")
+    just_shot_coords = []
+    for bird in zip(*definite_birds[::-1]):
+        abs_x = int(bird[0] + TEMPLATE_W / 2) + SCREENLFT
+        abs_y = int(bird[1] + TEMPLATE_H / 2) + SCREENTOP
+
+        # Check if the target is close to somewhere we just shot
+        too_close = False
+        for jsa in just_shot_coords:
+            dist = math.dist(jsa, [abs_x, abs_y])
+            if (dist < min([TEMPLATE_W, TEMPLATE_H])):
+                too_close = True
+                break
+        if (too_close):
             continue
 
-        # Read screen
-        frame_bgr = np.array(ImageGrab.grab(bbox=(screenLFT, screenTOP, screenRGT, screenBOT)))
+        # Move mouse to target
+        if DEBUG_LOCATIONS: print("        Shot at " + str(abs_x) + "," + str(abs_y))
+        pyautogui.moveTo(abs_x, abs_y)
+        just_shot_coords.append((abs_x, abs_y))
 
-        # Convert to gray
-        frame_gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
+def autoclicker():
+    clicked = False # Change to at_perk_menu?
+    if DEBUG_RUNNING: print("  Started process")
+    while True:
+        if DEBUG_RUNNING: print("    Started iteration")
+        if DEBUG_CLICKED: print("      Clicked: " + str(clicked))
+        frame_bgr = capture_screen()
+        frame_gray = convert_gray(frame_bgr)
+        definite_perks = find_perks(frame_gray)
+        definite_birds = find_birds(frame_gray)
 
-        # Apply template Matching
-        bird_candidates = cv2.matchTemplate(image=frame_gray, templ=template, method=cv2.TM_CCOEFF_NORMED)
-        definite_birds = np.where(bird_candidates >= 0.7)
+        # Pause if at perk selection screen
+        num_perks = set()
+        for perk in zip(*definite_perks[::-1]):
+            num_perks.add(perk)
+        if DEBUG_PERKS: print("      Perks: " + str(len(num_perks)))
+        if len(num_perks) > 2:
+            if clicked:
+                clicked = False
+                pyautogui.mouseUp()
+        else:
+            if not clicked:
+                clicked = True
+                pyautogui.mouseDown()
 
-        for bird in zip(*definite_birds[::-1]):
-            cv2.circle(img=frame_bgr, center=(int(bird[0] + template_w/2), int(bird[1] + template_h / 2)), radius=int(template_h/2), color=(255, 0, 0), thickness=2)
-            cv2.drawMarker(img=frame_bgr, position=(int(bird[0] + template_w/2), int(bird[1] + template_h / 2)),color=(255, 0, 0), markerType=cv2.MARKER_CROSS, markerSize=30, thickness=2, line_type=cv2.LINE_4)
-
-        just_shot_coords = []
-        for bird in zip(*definite_birds[::-1]):
-            abs_x = int(bird[0] + template_w / 2) + screenLFT
-            abs_y = int(bird[1] + template_h / 2) + screenTOP
-
-            # Check if the target is close to somewhere we just shot
-            too_close = False
-            for jsa in just_shot_coords:
-                dist = math.dist(jsa, [abs_x, abs_y])
-                if (dist < min([template_w, template_h])):
-                    too_close = True
-                    break
-            if (too_close):
-                continue
-
-            # Shoot!
-            if DEBUG: print("Shooting " + str(abs_x) + "," + str(abs_y))
-            pyautogui.moveTo(abs_x, abs_y)
-            just_shot_coords.append((abs_x, abs_y))
-
-        if DEBUG:
-            pyautogui.press('esc') # Pause game
-            cv2.imwrite('targets.png', frame_bgr)
-            print("Saved image")
-            winsound.Beep(432, 200)
-            break
+        if clicked: shoot_birds(definite_birds)
 
 def main():
     autoclicker_running = False
-    if DEBUG: print("Debug mode active.")
     print("Switch to game, then hold uparrow to start and downarrow to stop.")
     print("Ctrl+c to quit.")
-    while True: 
-        time.sleep(0.5) # Sleep to avoid input lag in-game.
-        #if DEBUG: print(autoclicker_running)
+    while True:
+        time.sleep(0.5)
+        #if DEBUG_RUNNING: print("autoclicker_running: " + str(autoclicker_running))
         try:
             if keyboard.is_pressed('up'):
                 if not autoclicker_running:
                     winsound.Beep(528, 500)
                     autoclicker_running = True
-                    if not DEBUG: pyautogui.mouseDown()
-                    p = multiprocessing.Process(target=find_and_shoot_birds, name="Autoclicker")
+                    p = multiprocessing.Process(target=autoclicker, name="Autoclicker")
                     p.start()
                     print("Started aimbot")
-                    if DEBUG:
-                        time.sleep(1)
-                        winsound.Beep(432, 500)
-                        autoclicker_running = False
-                        if not DEBUG: pyautogui.mouseUp()
-                        p.terminate()
-                        p.join()
-                        print("Stopped aimbot")
             elif keyboard.is_pressed('down'):
                 if autoclicker_running:
                     winsound.Beep(432, 500)
                     autoclicker_running = False
-                    if not DEBUG: pyautogui.mouseUp()
+                    pyautogui.mouseUp()
                     p.terminate()
                     p.join()
                     print("Stopped aimbot")
