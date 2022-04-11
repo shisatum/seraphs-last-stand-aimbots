@@ -3,11 +3,8 @@ Seraph's Last Stand OpenCV aimbot v0.1.3
 Prereqs: Win10, Python3, 1920x1080p
 """
 # To do:
-# 0) Change framerate on line 44
-# 1) Add pre-check for upgrade screen shape
-#    In order to do this, need to functionalize each run of shoot function from main() instead of it looping infinitely within itself.
-#    This also makes it easier to control the entire program.
-# 2) Train a CNN to detect enemies and connect it to this script.
+# 0) Play with framerate on line 44 *or* set framerate in main function and multiprocess each run of find_and_shoot_birds()
+# 1) Train a CNN to detect enemies and connect it to this script.
 import cv2
 import ctypes
 import keyboard
@@ -88,8 +85,9 @@ def find_and_shoot_birds():
             # Shoot!
             if DEBUG: print("Shooting " + str(abs_x) + "," + str(abs_y))
             ctypes.windll.user32.SetCursorPos(abs_x, abs_y)
-            ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)  # left down
-            ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)  # left up
+            # Changed to holding mouse down elsewhere
+            #ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)  # left down
+            #ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)  # left up
             just_shot_coords.append((abs_x, abs_y))
 
         if DEBUG:
@@ -115,6 +113,7 @@ def main():
                 if not autoclicker_running:
                     winsound.Beep(528, 500)
                     autoclicker_running = True
+                    if not DEBUG: pyautogui.mouseDown()
                     p = multiprocessing.Process(target=find_and_shoot_birds, name="Autoclicker")
                     p.start()
                     print("Started aimbot")
@@ -122,6 +121,7 @@ def main():
                         time.sleep(1)
                         winsound.Beep(432, 500)
                         autoclicker_running = False
+                        if not DEBUG: pyautogui.mouseUp()
                         p.terminate()
                         p.join()
                         print("Stopped aimbot")
@@ -129,6 +129,7 @@ def main():
                 if autoclicker_running:
                     winsound.Beep(432, 500)
                     autoclicker_running = False
+                    if not DEBUG: pyautogui.mouseUp()
                     p.terminate()
                     p.join()
                     print("Stopped aimbot")
