@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
-v0.1.4
+v0.2
 Problems:
  Isn't sensitive enough
   Solution: Try reducing initial detection threshold (Complete. Continue evaluating before further tuning)
+   Now that I'm blacklisting perk ycoords, try reducing detection threshold further. 
 To do:
  Refine blacklist into ranges instead of specific values. Or just match up to before decimal? try splitting string at '.'
 """
@@ -44,8 +45,10 @@ print(' Took {} seconds'.format(elapsed_time))
 DEBUG_MOUSE=False
 # Show detections dictionary structure:
 DEBUG_DETECTIONS=False
-# Show enemy locations and yblacklist detections:
+# Show enemy locations:
 DEBUG_LOCATIONS=True
+# Show yblacklist detections: 
+DEBUG_YBLACKLIST=False
 
 # Screen capture stuff 1560x700
 SCREENTOP = 100
@@ -81,6 +84,7 @@ def autoclicker():
         '427', #      Growth perk      0.973
         '484', #    Catalyst perk      0.993
         '554', #   Precision perk      0.966
+        '555', #      Growth perk      0.960
         '556', #       Wound perk      0.970
         '561', #    Catalyst perk      0.992
         '562', #       Wound perk      0.967
@@ -104,7 +108,6 @@ def autoclicker():
         # The model expects a batch of images, so add an axis with `tf.newaxis`.
         input_tensor = input_tensor[tf.newaxis, ...]
 
-        #print("Detecting...")
         detections = detect_fn(input_tensor)
 
         # All outputs are batches tensors.
@@ -126,11 +129,10 @@ def autoclicker():
 
         counter = 0
         enemies = 0
-        #print("Shooting...")
+        blacklisted = 0
         for target in detections['detection_scores']:
-            #counter += 1 # Moved to end of loop
-            # Shoot definite enemies. If definite enemy detected, also shoot less confident enemies:
-            if target > 0.96:# or (target > 0.90 and enemies > 0):
+            # Shoot definite enemies. <disabled>If definite enemy detected, also shoot less confident enemies</disabled>:
+            if target > 0.90:# or (target > 0.90 and enemies > 0):
                 # Get location of identified enemy in form of tensors representing bounding box:
                 ymin = detections['detection_boxes'][counter][0]
                 xmin = detections['detection_boxes'][counter][1]
@@ -145,16 +147,18 @@ def autoclicker():
                 ycoord_float = ((bottom+top)/2)
 
                 # Remove everything after decimal to get an int, compensating for screencap boundaries:
-                xcoord = int(str(xcoord_decimal).split('.')[0])+SCREENLFT
-                ycoord = int(str(ycoord_decimal).split('.')[0])+SCREENTOP
+                xcoord = int(str(xcoord_float).split('.')[0])+SCREENLFT
+                ycoord = int(str(ycoord_float).split('.')[0])+SCREENTOP
 
                 # Ignore known problem locations:
                 ignore = False
                 for coord in yblacklist:
                     if str(ycoord) == coord: # Remove everything after decimal
-                        if DEBUG_LOCATIONS: print("! Ignoring blacklisted ycoord: " + str(ycoord))
+                        if DEBUG_YBLACKLIST: print("! Ignoring blacklisted ycoord: " + str(ycoord))
+                        blacklisted += 1
                         ignore = True
 
+                # Shoot
                 if not ignore:
                     enemies += 1
                     if DEBUG_LOCATIONS: print(" Score: " + str(target) + " Loc: " + str(xcoord) + ", " + str(ycoord))
@@ -170,6 +174,8 @@ def autoclicker():
 
         if enemies > 0:
             print(" Shot " + str(enemies) + " enemies.")
+        if blacklisted > 0:
+            print(" Skipped " + str(blacklisted) + " blacklisted ycoords.")
 
 def main():
     autoclicker()
