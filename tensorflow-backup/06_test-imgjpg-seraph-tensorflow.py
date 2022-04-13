@@ -12,9 +12,9 @@ import tensorflow as tf
 #tf.get_logger().setLevel('ERROR')           # Suppress TensorFlow logging (2)
 
 # Enable GPU dynamic memory allocation
-#gpus = tf.config.experimental.list_physical_devices('GPU')
-#for gpu in gpus:
-#    tf.config.experimental.set_memory_growth(gpu, True)
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 IMAGE_PATHS = ['img.jpg']
 #PATH_TO_SAVED_MODEL = "exported-models\my_model_1\saved_model" # Old model

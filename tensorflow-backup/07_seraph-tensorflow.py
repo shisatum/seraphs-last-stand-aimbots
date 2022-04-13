@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
-v0.2
+v0.2.0
 Problems:
  Isn't sensitive enough
   Solution: Try reducing initial detection threshold (Complete. Continue evaluating before further tuning)
@@ -37,9 +37,9 @@ elapsed_time = end_time - start_time
 print(' Took {} seconds'.format(elapsed_time))
 
 # Enable GPU dynamic memory allocation
-#gpus = tf.config.experimental.list_physical_devices('GPU')
-#for gpu in gpus:
-#    tf.config.experimental.set_memory_growth(gpu, True)
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 # Disable mouse clicks:
 DEBUG_MOUSE=False
@@ -80,6 +80,7 @@ def autoclicker():
     # Define known problem ycoords to skip:
     yblacklist = [ # Name            # Detectable at
         '450', # Annoying invisible enemy. idk what this is
+        '458', #    Friction perk      0.876 <--
         '425', #      Growth perk      0.977
         '427', #      Growth perk      0.973
         '484', #    Catalyst perk      0.993
@@ -88,6 +89,7 @@ def autoclicker():
         '556', #       Wound perk      0.970
         '561', #    Catalyst perk      0.992
         '562', #       Wound perk      0.967
+        '653', #       Souls perk text 0.932
         '676', #       Wound perk      0.966
         '678', #     Barrier perk text 0.970
         '679', #     Barrier perk text 0.975
@@ -132,7 +134,8 @@ def autoclicker():
         blacklisted = 0
         for target in detections['detection_scores']:
             # Shoot definite enemies. <disabled>If definite enemy detected, also shoot less confident enemies</disabled>:
-            if target > 0.90:# or (target > 0.90 and enemies > 0):
+            #if target > 0.90:# or (target > 0.90 and enemies > 0):
+            if target > 0.85:
                 # Get location of identified enemy in form of tensors representing bounding box:
                 ymin = detections['detection_boxes'][counter][0]
                 xmin = detections['detection_boxes'][counter][1]
@@ -173,9 +176,9 @@ def autoclicker():
                     if not DEBUG_MOUSE: pyautogui.mouseUp()
 
         if enemies > 0:
-            print(" Shot " + str(enemies) + " enemies.")
+            print(" Shot " + str(enemies) + " enemies")
         if blacklisted > 0:
-            print(" Skipped " + str(blacklisted) + " blacklisted ycoords.")
+            print("! Skipped " + str(blacklisted) + " blacklisted ycoords")
 
 def main():
     autoclicker()
