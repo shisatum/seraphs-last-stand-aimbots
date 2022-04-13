@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
-v0.2.0
+v0.2.2
 Problems:
- Isn't sensitive enough
-  Now that I'm blacklisting perk ycoords, try reducing detection threshold further. (In progress)
+    Is accurate but continues to hit perk menu items.
+        Solution: Continue to blacklist ycoords as encountered. 
 To do:
- Continue to loop detection, but multiprocess the shooting within that, so we can loop shooting as well inside the
- multiprocess, but kill it and restart it from the detection loop each time detect_fn finishes running.
- Could also use this to add back in up/down arrow starting/stopping.
-     May have to switch to using input listener for this to avoid lag or having to use time.sleep().
- Add testing mode that displays detected enemy points (and eventually boxes) instead of clicking them.
-  Use new OpenGL object. Add a bool constant to determine whether script is in shooting or drawing mode. 
+    Continue to loop detection, but multiprocess the shooting within that, so we can loop shooting as well inside the
+    multiprocess, but kill it and restart it from the detection loop each time detect_fn finishes running.
+    Could also use this to add back in up/down arrow starting/stopping.
+        May have to switch to using input listener for this to avoid lag or having to use time.sleep().
+    Add testing mode that displays detected enemy points (and eventually boxes) instead of clicking them.
+            Maybe just display confidence % centered on the detected object. 
+        Use new OpenGL object. Add a bool constant to determine whether script is in shooting or drawing mode.
+            If bool+True: run test mode. Else, run normal click mode. 
+            ! Only create window above capture area
+            Allow switch between Click and Draw mode while running? Is this necessary? Probably not. 
 """
 
 import time
@@ -91,6 +95,7 @@ def autoclicker():
         '416', #      Regrowth perk      0.861 <---
         '430', #      Catalyst perk      0.896
         '450', #                  ?      ?
+        '456', #      Friction perk      0.925
         '458', #      Friction perk      0.876 <--
         '425', #        Growth perk      0.977
         '427', #        Growth perk      0.973
@@ -102,6 +107,7 @@ def autoclicker():
         '554', #     Precision perk      0.966
         '555', #        Growth perk      0.960
         '556', #         Wound perk      0.970
+        '557', #        Growth perk      0.938
         '558', #        Growth perk      0.941
         '561', #      Catalyst perk      0.992
         '562', #         Wound perk      0.967
