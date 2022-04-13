@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
-v0.1.3
+v0.1.4
 Problems:
  Isn't sensitive enough
   Solution: Try reducing initial detection threshold (Complete. Continue evaluating before further tuning)
@@ -140,15 +140,19 @@ def autoclicker():
                 # Convert tensors to coordinates and normalize them to screencap size:
                 (left, right, top, bottom) = (xmin * IM_WIDTH, xmax * IM_WIDTH, ymin * IM_HEIGHT, ymax * IM_HEIGHT)
 
-                # Find center of bounding box and compensate for screencap boundaries:
-                xcoord = ((right+left)/2)+SCREENLFT
-                ycoord = ((bottom+top)/2)+SCREENTOP
+                # Find center of bounding box:
+                xcoord_float = ((right+left)/2)
+                ycoord_float = ((bottom+top)/2)
+
+                # Remove everything after decimal to get an int, compensating for screencap boundaries:
+                xcoord = int(str(xcoord_decimal).split('.')[0])+SCREENLFT
+                ycoord = int(str(ycoord_decimal).split('.')[0])+SCREENTOP
 
                 # Ignore known problem locations:
                 ignore = False
                 for coord in yblacklist:
-                    if str(ycoord).split('.')[0] == coord: # Remove everything after decimal
-                        if DEBUG_LOCATIONS: print("! Ignoring blacklisted ycoord: " + str(ycoord).split('.')[0])
+                    if str(ycoord) == coord: # Remove everything after decimal
+                        if DEBUG_LOCATIONS: print("! Ignoring blacklisted ycoord: " + str(ycoord))
                         ignore = True
 
                 if not ignore:
