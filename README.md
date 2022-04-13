@@ -20,5 +20,5 @@ Ctrl+c to quit.
 
 ## tensorflow-backup
 Backup of a collection of resources for the TensorFlow version of the aimbot that I'm working on. 
-The exported model itself is a few hundred MB, so it's not included in this repo for the time being. 
-If you want me to add all the files necessary to run this, create an issue or contact me and I'll do it. 
+The exported model itself is a few hundred MB, so it's not included in this repo.
+If you want me to add the pipeline file and other info required to train the model yourself, create an issue or contact me and I'll do it.
