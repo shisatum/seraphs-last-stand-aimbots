@@ -4,10 +4,14 @@
 v0.2.0
 Problems:
  Isn't sensitive enough
-  Solution: Try reducing initial detection threshold (Complete. Continue evaluating before further tuning)
-   Now that I'm blacklisting perk ycoords, try reducing detection threshold further. 
+  Now that I'm blacklisting perk ycoords, try reducing detection threshold further. (In progress)
 To do:
- Refine blacklist into ranges instead of specific values. Or just match up to before decimal? try splitting string at '.'
+ Continue to loop detection, but multiprocess the shooting within that, so we can loop shooting as well inside the
+ multiprocess, but kill it and restart it from the detection loop each time detect_fn finishes running.
+ Could also use this to add back in up/down arrow starting/stopping.
+     May have to switch to using input listener for this to avoid lag or having to use time.sleep().
+ Add testing mode that displays detected enemy points (and eventually boxes) instead of clicking them.
+  Use new OpenGL object. Add a bool constant to determine whether script is in shooting or drawing mode. 
 """
 
 import time
@@ -45,10 +49,12 @@ for gpu in gpus:
 DEBUG_MOUSE=False
 # Show detections dictionary structure:
 DEBUG_DETECTIONS=False
-# Show enemy locations:
+# Show clicked enemy locations:
 DEBUG_LOCATIONS=True
-# Show yblacklist detections: 
+# Show total yblacklist detections: 
 DEBUG_YBLACKLIST=False
+# Show individual yblacklist detections: 
+DEBUG_YBLACKLIST_2=False
 
 # Screen capture stuff 1560x700
 SCREENTOP = 100
@@ -78,22 +84,40 @@ def autoclicker():
     print("Starting Autoclicker.")
     winsound.Beep(528, 500)
     # Define known problem ycoords to skip:
-    yblacklist = [ # Name            # Detectable at
-        '450', # Annoying invisible enemy. idk what this is
-        '458', #    Friction perk      0.876 <--
-        '425', #      Growth perk      0.977
-        '427', #      Growth perk      0.973
-        '484', #    Catalyst perk      0.993
-        '554', #   Precision perk      0.966
-        '555', #      Growth perk      0.960
-        '556', #       Wound perk      0.970
-        '561', #    Catalyst perk      0.992
-        '562', #       Wound perk      0.967
-        '653', #       Souls perk text 0.932
-        '676', #       Wound perk      0.966
-        '678', #     Barrier perk text 0.970
-        '679', #     Barrier perk text 0.975
-        '680', #    Immortal perk text 0.967
+    yblacklist = [  # Name             # Detectable at
+        '407', #          Luck perk      0.951
+        '408', #          Luck perk      0.864
+        '413', #         Swift perk      0.917
+        '416', #      Regrowth perk      0.861 <---
+        '430', #      Catalyst perk      0.896
+        '450', #                  ?      ?
+        '458', #      Friction perk      0.876 <--
+        '425', #        Growth perk      0.977
+        '427', #        Growth perk      0.973
+        '452', #         Wound perk      0.966
+        '484', #      Catalyst perk      0.993
+        '510', #        Growth perk      0.859 <----
+        '516', #         Focus perk      0.931
+        '517', #          Rush perk      0.905
+        '554', #     Precision perk      0.966
+        '555', #        Growth perk      0.960
+        '556', #         Wound perk      0.970
+        '558', #        Growth perk      0.941
+        '561', #      Catalyst perk      0.992
+        '562', #         Wound perk      0.967
+        '559', #         Wound perk      0.943
+        '653', #         Souls perk text 0.932
+        '650', #     Stability perk text 0.892 <
+        '676', #         Wound perk      0.966
+        '675', #         Cloak perk text 0.860 <---
+        '677', #      Immortal perk text 0.851 <----
+        '678', #       Barrier perk text 0.970
+        '679', #       Barrier perk text 0.975
+        '693', # Fragmentation perk text 0.987
+        '680', #      Immortal perk text 0.967
+        '682', #      Immortal perk text 0.856 <---
+        '687', #   Will-O-Wisp perk text 0.919
+        '707', # Fragmentation perk text 0.873 <--
         ]
     while True:
         if keyboard.is_pressed('down'):
@@ -133,9 +157,11 @@ def autoclicker():
         enemies = 0
         blacklisted = 0
         for target in detections['detection_scores']:
+
             # Shoot definite enemies. <disabled>If definite enemy detected, also shoot less confident enemies</disabled>:
             #if target > 0.90:# or (target > 0.90 and enemies > 0):
             if target > 0.85:
+
                 # Get location of identified enemy in form of tensors representing bounding box:
                 ymin = detections['detection_boxes'][counter][0]
                 xmin = detections['detection_boxes'][counter][1]
@@ -157,7 +183,7 @@ def autoclicker():
                 ignore = False
                 for coord in yblacklist:
                     if str(ycoord) == coord: # Remove everything after decimal
-                        if DEBUG_YBLACKLIST: print("! Ignoring blacklisted ycoord: " + str(ycoord))
+                        if DEBUG_YBLACKLIST_2: print("! Ignoring blacklisted ycoord: " + str(ycoord))
                         blacklisted += 1
                         ignore = True
 
@@ -167,18 +193,20 @@ def autoclicker():
                     if DEBUG_LOCATIONS: print(" Score: " + str(target) + " Loc: " + str(xcoord) + ", " + str(ycoord))
                     pyautogui.moveTo(xcoord, ycoord)
 
-            # Check to change click status once per detection cycle:
             counter += 1
-            if counter == 1:
-                if enemies > 0:
-                    if not DEBUG_MOUSE: pyautogui.mouseDown()
-                else:
-                    if not DEBUG_MOUSE: pyautogui.mouseUp()
+
+        # Check to change click status once per detection cycle:
+        if enemies > 0:
+            if not DEBUG_MOUSE: pyautogui.mouseDown()
+        #else: # Removed to get more shots out
+        #    if not DEBUG_MOUSE and not DEBUG_PERKS:
+        #        pyautogui.mouseUp()
 
         if enemies > 0:
             print(" Shot " + str(enemies) + " enemies")
-        if blacklisted > 0:
-            print("! Skipped " + str(blacklisted) + " blacklisted ycoords")
+        if DEBUG_YBLACKLIST: 
+            if blacklisted > 0:
+                print("! Skipped " + str(blacklisted) + " blacklisted ycoords")
 
 def main():
     autoclicker()
