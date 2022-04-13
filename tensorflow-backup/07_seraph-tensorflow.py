@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
-v0.1.2
+v0.1.3
 Problems:
  Isn't sensitive enough
   Solution: Try reducing initial detection threshold (Complete. Continue evaluating before further tuning)
@@ -40,10 +40,12 @@ print(' Took {} seconds'.format(elapsed_time))
 #for gpu in gpus:
 #    tf.config.experimental.set_memory_growth(gpu, True)
 
-# Disables mouse clicks if true
+# Disable mouse clicks:
 DEBUG_MOUSE=False
 # Show detections dictionary structure:
 DEBUG_DETECTIONS=False
+# Show enemy locations and yblacklist detections:
+DEBUG_LOCATIONS=True
 
 # Screen capture stuff 1560x700
 SCREENTOP = 100
@@ -73,26 +75,19 @@ def autoclicker():
     print("Starting Autoclicker.")
     winsound.Beep(528, 500)
     # Define known problem ycoords to skip:
-    yblacklist = [            # Name                   # Detectable at
-        '450.0',              # Annoying invisible enemy. idk what this is
-        '484.4199299812317',  #   Damage upgrade perk. 0.992
-        '484.48014706373215', #   Damage upgrade perk. 0.992
-        '484.3454122543335',  #   Damage upgrade perk. 0.993
-        '425.92676877975464', #           Growth perk. 0.977
-        '425.7742702960968',  #           Growth perk. 0.977
-        '554.9560904502869',  #           Growth perk. 0.977
-        '678.6397874355316',  #     Barrier perk text. 0.975
-        '679.2737305164337',  #     Barrier perk text. 0.975
-        '427.28709280490875', #           Growth perk. 0.973
-        '678.9040207862854',  # Thunderbolt perk text. 0.972
-        '678.1638085842133'   #     Barrier perk text. 0.970
-        '680.664324760437',   #    Immortal perk text. 0.967
-        '680.8577537536621',  #    Immortal perk text. 0.967
-        '562.5507235527039',  #            Wound perk. 0.967
-        '562.6172304153442',  #   Damage upgrade perk. 0.966
-        '680.8537483215332',  #    Immortal perk text. 0.966
-        '676.8829464912415',  #            Wound perk. 0.966
-        '554.4820725917816',  #        Precision perk. 0.966
+    yblacklist = [ # Name            # Detectable at
+        '450', # Annoying invisible enemy. idk what this is
+        '425', #      Growth perk      0.977
+        '427', #      Growth perk      0.973
+        '484', #    Catalyst perk      0.993
+        '554', #   Precision perk      0.966
+        '556', #       Wound perk      0.970
+        '561', #    Catalyst perk      0.992
+        '562', #       Wound perk      0.967
+        '676', #       Wound perk      0.966
+        '678', #     Barrier perk text 0.970
+        '679', #     Barrier perk text 0.975
+        '680', #    Immortal perk text 0.967
         ]
     while True:
         if keyboard.is_pressed('down'):
@@ -152,13 +147,13 @@ def autoclicker():
                 # Ignore known problem locations:
                 ignore = False
                 for coord in yblacklist:
-                    if str(ycoord) == coord:
-                        print("! Ignoring blacklisted ycoord: " + str(ycoord))
+                    if str(ycoord).split('.')[0] == coord: # Remove everything after decimal
+                        if DEBUG_LOCATIONS: print("! Ignoring blacklisted ycoord: " + str(ycoord).split('.')[0])
                         ignore = True
 
                 if not ignore:
                     enemies += 1
-                    print(" Score: " + str(target) + " Loc: " + str(xcoord) + ", " + str(ycoord))
+                    if DEBUG_LOCATIONS: print(" Score: " + str(target) + " Loc: " + str(xcoord) + ", " + str(ycoord))
                     pyautogui.moveTo(xcoord, ycoord)
 
             # Check to change click status once per detection cycle:
