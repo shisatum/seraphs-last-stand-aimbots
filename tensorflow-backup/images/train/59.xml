@@ -1,0 +1,26 @@
+<annotation>
+	<folder>images</folder>
+	<filename>59.jpg</filename>
+	<path>C:\Users\Puter\Desktop\python\models\models\images\59.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1560</width>
+		<height>700</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>enemy</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>380</xmin>
+			<ymin>115</ymin>
+			<xmax>456</xmax>
+			<ymax>201</ymax>
+		</bndbox>
+	</object>
+</annotation>
